@@ -110,22 +110,22 @@ scene.add(stars);
 
 // ===== CAMERA FLIGHT SYSTEM =====
 
-// Starting position (distant from nebula)
-const startPosition = new THREE.Vector3(0, 2, 20);
+// Starting position (deep space, far from nebula for meditative journey)
+const startPosition = new THREE.Vector3(0, 5, 100);
 
 // Create flight path using CatmullRomCurve3
 const flightPath = createNebulaFlightPath(
   startPosition,
   nebulaPosition,
-  0.3 // Curve intensity (0 = straight, 1 = very curved)
+  0.08 // Low curve intensity for smooth, gentle flight (not roller coaster)
 );
 
 // Create camera controller
 const cameraController = new CameraController({
   camera,
   path: flightPath,
-  duration: 10, // 10 second flight for testing (will sync with audio in M2)
-  easing: Easing.easeInOutCubic,
+  duration: 20, // 20 second relaxing flight for testing (will sync with audio in M2)
+  easing: Easing.easeInOutQuad, // Gentle easing for meditative experience
   lookAtTarget: nebulaPosition, // Always look at nebula center
   onProgress: (progress) => {
     // Update progress display

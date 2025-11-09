@@ -47,16 +47,69 @@
       #info p {
         font-size: 12px;
         opacity: 0.7;
+        margin: 3px 0;
       }
+
+      #controls {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.7);
+        background: rgba(0, 0, 0, 0.5);
+        padding: 10px 15px;
+        border-radius: 4px;
+        z-index: 10;
+      }
+
+      #controls p {
+        margin: 2px 0;
+      }
+
+      #flight-info {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.8);
+        background: rgba(0, 0, 0, 0.5);
+        padding: 10px 15px;
+        border-radius: 4px;
+        z-index: 10;
+        text-align: right;
+      }
+
+      #flight-info p {
+        margin: 3px 0;
+        font-size: 12px;
+      }
+
+      .status-ready { color: #4CAF50; }
+      .status-flying { color: #2196F3; }
+      .status-paused { color: #FF9800; }
+      .status-complete { color: #9C27B0; }
     </style>
   </head>
   <body>
     <div id="canvas-container"></div>
+
     <div id="info">
       <h1>Cosmic VoidVoyage</h1>
-      <p>Milestone 1 - Procedural Nebula Generation</p>
+      <p>Milestone 1.2 - Camera Flight System</p>
       <p id="fps">60 FPS</p>
     </div>
+
+    <div id="flight-info">
+      <p>Status: <span id="flight-status" class="status-ready">Ready</span></p>
+      <p>Progress: <span id="flight-progress">0%</span></p>
+    </div>
+
+    <div id="controls">
+      <p><strong>Controls:</strong></p>
+      <p>SPACE / ENTER - Start/Pause Flight</p>
+      <p>R - Reset to Start</p>
+    </div>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

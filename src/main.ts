@@ -59,6 +59,7 @@ const uniforms = {
   uResolution: {
     value: new THREE.Vector2(window.innerWidth, window.innerHeight),
   },
+  uCameraPosition: { value: new THREE.Vector3() },
 };
 
 // Create shader material
@@ -177,14 +178,11 @@ function updateFlightStatus(status: string): void {
 window.addEventListener('keydown', (event) => {
   switch (event.code) {
     case 'Space':
+    case 'Enter':
+      // Toggle between play and pause (both keys do the same thing)
       event.preventDefault();
-      if (cameraController.isActive()) {
-        cameraController.stop();
-        updateFlightStatus('Paused');
-      } else {
-        cameraController.start();
-        updateFlightStatus('Flying');
-      }
+      cameraController.toggle();
+      updateFlightStatus(cameraController.isActive() ? 'Flying' : 'Paused');
       break;
 
     case 'KeyR':
@@ -193,13 +191,6 @@ window.addEventListener('keydown', (event) => {
       cameraController.reset();
       updateFlightStatus('Ready');
       updateFlightProgress(0);
-      break;
-
-    case 'Enter':
-      // Start flight (same as space)
-      event.preventDefault();
-      cameraController.start();
-      updateFlightStatus('Flying');
       break;
   }
 });
@@ -220,6 +211,9 @@ function animate() {
 
   // Update camera controller
   cameraController.update();
+
+  // Update camera position uniform for shader
+  uniforms.uCameraPosition.value.copy(camera.position);
 
   // Slowly rotate stars for parallax effect
   stars.rotation.y += 0.0001;

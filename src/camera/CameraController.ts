@@ -59,6 +59,7 @@ export class CameraController {
 
   private isFlying: boolean = false;
   private startTime: number = 0;
+  private elapsedTimeBeforePause: number = 0; // Track time before pause for resume
   private currentProgress: number = 0;
 
   constructor(config: CameraFlightConfig) {
@@ -73,21 +74,68 @@ export class CameraController {
   }
 
   /**
-   * Start the camera flight
+   * Start the camera flight from the beginning
    */
   start(): void {
     this.isFlying = true;
     this.startTime = performance.now();
+    this.elapsedTimeBeforePause = 0;
     this.currentProgress = 0;
-    console.log('Camera flight started');
+    console.log('Camera flight started from beginning');
   }
 
   /**
-   * Stop the camera flight
+   * Resume the camera flight from where it was paused
+   */
+  resume(): void {
+    if (this.currentProgress >= 1.0) {
+      // If completed, start over
+      this.start();
+      return;
+    }
+
+    this.isFlying = true;
+    this.startTime = performance.now();
+    console.log(
+      `Camera flight resumed from ${Math.round(this.currentProgress * 100)}%`
+    );
+  }
+
+  /**
+   * Pause the camera flight (can be resumed later)
+   */
+  pause(): void {
+    if (!this.isFlying) return;
+
+    this.isFlying = false;
+
+    // Store elapsed time so we can resume from this point
+    const currentTime = performance.now();
+    const sessionElapsed = (currentTime - this.startTime) / 1000;
+    this.elapsedTimeBeforePause += sessionElapsed;
+
+    console.log(
+      `Camera flight paused at ${Math.round(this.currentProgress * 100)}%`
+    );
+  }
+
+  /**
+   * Toggle between flying and paused states
+   */
+  toggle(): void {
+    if (this.isFlying) {
+      this.pause();
+    } else {
+      this.resume();
+    }
+  }
+
+  /**
+   * Stop the camera flight (deprecated - use pause() instead)
+   * @deprecated Use pause() for pausing, reset() for stopping
    */
   stop(): void {
-    this.isFlying = false;
-    console.log('Camera flight stopped');
+    this.pause();
   }
 
   /**
@@ -96,7 +144,9 @@ export class CameraController {
   reset(): void {
     this.isFlying = false;
     this.currentProgress = 0;
+    this.elapsedTimeBeforePause = 0;
     this.updateCameraPosition(0);
+    console.log('Camera flight reset to start position');
   }
 
   /**
@@ -106,10 +156,13 @@ export class CameraController {
     if (!this.isFlying) return;
 
     const currentTime = performance.now();
-    const elapsed = (currentTime - this.startTime) / 1000; // Convert to seconds
+    const sessionElapsed = (currentTime - this.startTime) / 1000;
+
+    // Total elapsed = time before pause + current session time
+    const totalElapsed = this.elapsedTimeBeforePause + sessionElapsed;
 
     // Calculate linear progress (0 to 1)
-    const linearProgress = Math.min(elapsed / this.duration, 1.0);
+    const linearProgress = Math.min(totalElapsed / this.duration, 1.0);
 
     // Apply easing function
     const easedProgress = this.easing(linearProgress);

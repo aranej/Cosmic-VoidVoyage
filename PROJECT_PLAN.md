@@ -41,21 +41,79 @@
 
 ---
 
-## [ ] Task 2: Core Development [TBD]
+## [>] Milestone 1: Core Rendering Engine [2025-11-08T16:00:00+01:00]
 
-*Milestones to be defined after PRD completion*
+**Goal:** Implement procedural nebula generation and camera flight system
+
+**Timeline:** Week 2 of development
+**Status:** IN PROGRESS
+
+### Sub-Tasks:
+
+- [>] **M1.1: Procedural Nebula Shader** [2025-11-08T16:00:00+01:00]
+  - [x] M1.1.1: Research Perlin noise and fBM GLSL implementations [2025-11-08T16:15:00+01:00]
+    - Identified: Stefan Gustavson/Ashima simplex noise (production-ready)
+    - Reference: The Book of Shaders fBM techniques
+    - Reference: Íñigo Quílez fBM article
+  - [x] M1.1.2: Create basic shader with noise functions [2025-11-08T16:45:00+01:00]
+    - Implemented: 3D Simplex noise (Ashima/Gustavson)
+    - Implemented: fBM with configurable octaves
+    - Files: noise.glsl, nebula.vert.glsl, nebula.frag.glsl
+  - [x] M1.1.3: Implement Hubble-inspired color gradients [2025-11-08T16:45:00+01:00]
+    - Palette: Carina Nebula (blues, purples, magentas, oranges, yellows)
+    - Multi-layer color mixing based on density
+    - Depth variation for 3D appearance
+  - [x] M1.1.4: Add subtle animation (rotation, pulsing) [2025-11-08T16:45:00+01:00]
+    - Time-based Z-axis drift (slow rotation)
+    - Sinusoidal pulsing (breathing effect)
+    - Animated stars background for parallax
+  - [>] M1.1.5: Optimize for 60 FPS target [2025-11-08T17:00:00+01:00]
+    - Build verified: 9.16KB app code (3.80KB gzipped)
+    - Total bundle: 126KB gzipped ✅
+    - Performance testing in progress
+  - **Status:** Shader implementation complete, optimization in progress
+
+- [ ] **M1.2: Camera Flight System**
+  - Implement CatmullRomCurve3 spline paths
+  - Create smooth interpolation with easing
+  - Test path from origin to nebula
+  - **Expected Output:** Smooth camera movement system
+
+- [ ] **M1.3: First Nebula Complete**
+  - Design fully-realized nebula (inspired by Carina Nebula)
+  - Document shader parameters
+  - Verify 60 FPS performance
+  - **Expected Output:** Production-ready first nebula
 
 ---
 
-## [ ] Task 3: Polish & Optimization [TBD]
+## [ ] Milestone 2: Audio Synchronization [TBD]
 
-*Details to be defined after PRD completion*
+*To be started after M1 completion*
 
 ---
 
-## [ ] Task 4: Deployment & Launch [TBD]
+## [ ] Milestone 3: Content Creation [TBD]
 
-*Details to be defined after PRD completion*
+*5 nebulae + 10 audio tracks - To be started after M2*
+
+---
+
+## [ ] Milestone 4: User Interface [TBD]
+
+*Selection UI and journey flow - To be started after M3*
+
+---
+
+## [ ] Milestone 5: Polish & Optimization [TBD]
+
+*Post-processing and performance tuning - To be started after M4*
+
+---
+
+## [ ] Milestone 6: Deployment & Launch [TBD]
+
+*Production deployment - Final milestone*
 
 ---
 

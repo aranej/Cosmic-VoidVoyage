@@ -3,7 +3,8 @@
  * Camera Flight System Implementation
  *
  * Features:
- * - Procedural nebula generation using Simplex noise + fBM
+ * - Volumetric nebula rendered on inside of sphere (true immersion)
+ * - Procedural generation using Simplex noise + fBM
  * - Automated camera flight along smooth spline path
  * - Easing functions for natural acceleration/deceleration
  * - Dynamic camera orientation (look-at nebula center)
@@ -59,7 +60,6 @@ const uniforms = {
   uResolution: {
     value: new THREE.Vector2(window.innerWidth, window.innerHeight),
   },
-  uCameraPosition: { value: new THREE.Vector3() },
 };
 
 // Create shader material
@@ -68,13 +68,14 @@ const nebulaMaterial = new THREE.ShaderMaterial({
   fragmentShader,
   uniforms,
   transparent: true,
-  side: THREE.DoubleSide,
+  side: THREE.BackSide, // Render on inside of sphere
   depthWrite: false,
   blending: THREE.AdditiveBlending,
 });
 
-// Create nebula mesh (positioned at origin)
-const nebulaGeometry = new THREE.PlaneGeometry(10, 10, 128, 128);
+// Create nebula sphere (camera will be inside)
+// Radius 50 safely encloses camera flight path (max ~26 units from origin)
+const nebulaGeometry = new THREE.SphereGeometry(50, 128, 64);
 const nebulaMesh = new THREE.Mesh(nebulaGeometry, nebulaMaterial);
 scene.add(nebulaMesh);
 
@@ -211,9 +212,6 @@ function animate() {
 
   // Update camera controller
   cameraController.update();
-
-  // Update camera position uniform for shader
-  uniforms.uCameraPosition.value.copy(camera.position);
 
   // Slowly rotate stars for parallax effect
   stars.rotation.y += 0.0001;

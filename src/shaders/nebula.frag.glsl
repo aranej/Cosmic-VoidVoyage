@@ -15,6 +15,7 @@ precision highp float;
 
 uniform float uTime;
 uniform vec2 uResolution;
+uniform vec3 uCameraPosition;
 
 varying vec2 vUv;
 varying vec3 vPosition;
@@ -112,6 +113,28 @@ void main() {
 
   // Boost brightness in high-density regions
   color *= (1.0 + density * 0.5);
+
+  //
+  // VOLUMETRIC FADE-OUT EFFECT
+  // Simulates exiting a fog volume when camera passes through nebula
+  //
+
+  // Calculate Z distance from camera to nebula plane (nebula is at z=0)
+  float cameraZ = uCameraPosition.z;
+
+  // When camera passes through the nebula (z < 0), apply smooth fadeout
+  // This creates the effect of exiting a volume of fog rather than hitting a wall
+  if (cameraZ < 0.0) {
+    // Distance past the nebula plane
+    float distancePastNebula = abs(cameraZ);
+
+    // Smooth fadeout: starts at z=0, fully transparent by z=-3
+    // Adjust the fadeout distance (3.0) to control how quickly it fades
+    float fadeoutFactor = 1.0 - smoothstep(0.0, 3.0, distancePastNebula);
+
+    // Apply fadeout to alpha
+    alpha *= fadeoutFactor;
+  }
 
   // Output final color
   gl_FragColor = vec4(color, alpha);

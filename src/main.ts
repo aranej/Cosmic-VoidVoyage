@@ -74,7 +74,9 @@ const nebulaMaterial = new THREE.ShaderMaterial({
 });
 
 // Create nebula mesh (positioned at origin)
-const nebulaGeometry = new THREE.PlaneGeometry(10, 10, 128, 128);
+// Large plane (50x50) ensures edges never visible even at close camera distances
+// Subdivision (128x128) maintains smooth procedural detail
+const nebulaGeometry = new THREE.PlaneGeometry(50, 50, 128, 128);
 const nebulaMesh = new THREE.Mesh(nebulaGeometry, nebulaMaterial);
 scene.add(nebulaMesh);
 

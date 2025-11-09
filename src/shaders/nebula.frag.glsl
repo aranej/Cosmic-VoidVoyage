@@ -115,26 +115,17 @@ void main() {
   color *= (1.0 + density * 0.5);
 
   //
-  // VOLUMETRIC FADE-OUT EFFECT
-  // Simulates exiting a fog volume when camera passes through nebula
+  // DISTANCE-BASED FADE FOR CLOSE PROXIMITY
+  // Prevents hard edges when camera is very close to nebula plane
   //
 
-  // Calculate Z distance from camera to nebula plane (nebula is at z=0)
-  float cameraZ = uCameraPosition.z;
+  // Calculate distance from camera to this fragment's position in world space
+  float fragDistanceFromCamera = length(vPosition - uCameraPosition);
 
-  // When camera passes through the nebula (z < 0), apply smooth fadeout
-  // This creates the effect of exiting a volume of fog rather than hitting a wall
-  if (cameraZ < 0.0) {
-    // Distance past the nebula plane
-    float distancePastNebula = abs(cameraZ);
-
-    // Smooth fadeout: starts at z=0, fully transparent by z=-3
-    // Adjust the fadeout distance (3.0) to control how quickly it fades
-    float fadeoutFactor = 1.0 - smoothstep(0.0, 3.0, distancePastNebula);
-
-    // Apply fadeout to alpha
-    alpha *= fadeoutFactor;
-  }
+  // Apply gentle fade when camera is very close (< 5 units)
+  // This prevents harsh cutoffs at close range
+  float proximityFade = smoothstep(0.5, 5.0, fragDistanceFromCamera);
+  alpha *= proximityFade;
 
   // Output final color
   gl_FragColor = vec4(color, alpha);

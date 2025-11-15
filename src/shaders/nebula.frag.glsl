@@ -4,17 +4,18 @@
  * Procedural nebula generation using Simplex noise and Fractal Brownian Motion (fBM).
  * Inspired by the Carina Nebula from Hubble Space Telescope imagery.
  *
- * Color palette:
- * - Deep blues/purples (outer regions, cooler gas)
- * - Pink/magenta (ionized hydrogen)
- * - Orange/yellow (inner glow, warmer regions)
- * - Bright whites (star-forming regions)
+ * Authentic Hubble Palette (SHO):
+ * - Sulfur (S II) → Deep reds and crimsons (warm dust regions)
+ * - Hydrogen (H-alpha) → Greens and ambers (ionized gas)
+ * - Oxygen (O III) → Cyans and teals (hot ionized regions)
+ * - Star-forming cores → Bright golds and whites
  */
 
 precision highp float;
 
 uniform float uTime;
 uniform vec2 uResolution;
+uniform vec3 uCameraPosition;
 
 varying vec2 vUv;
 varying vec3 vPosition;
@@ -26,34 +27,34 @@ varying vec3 vPosition;
 #include <noise>
 
 //
-// Color palette inspired by Carina Nebula
+// Authentic Carina Nebula color palette (Hubble SHO mapping)
 //
 vec3 getNebulaColor(float density, float depth) {
-  // Base colors
-  vec3 deepBlue = vec3(0.05, 0.1, 0.3);     // Outer region
-  vec3 purple = vec3(0.3, 0.1, 0.4);         // Mid region
-  vec3 magenta = vec3(0.8, 0.2, 0.6);        // Ionized hydrogen
-  vec3 orange = vec3(0.9, 0.4, 0.1);         // Inner glow
-  vec3 yellow = vec3(1.0, 0.9, 0.3);         // Bright core
-  vec3 white = vec3(1.0, 1.0, 1.0);          // Star-forming regions
+  // Hubble palette colors based on real Carina Nebula observations
+  vec3 darkTeal = vec3(0.03, 0.12, 0.18);      // Oxygen (O III) - diffuse outer regions
+  vec3 crimson = vec3(0.4, 0.08, 0.12);        // Sulfur (S II) - warm dust clouds
+  vec3 deepRust = vec3(0.6, 0.25, 0.15);       // Sulfur + Hydrogen blend
+  vec3 amber = vec3(0.85, 0.55, 0.2);          // Hydrogen (H-alpha) - ionized gas
+  vec3 golden = vec3(1.0, 0.85, 0.4);          // Dense hydrogen - star-forming regions
+  vec3 paleGold = vec3(1.0, 0.95, 0.85);       // Bright stellar cores
 
-  // Multi-layered color mixing based on density
-  vec3 color = deepBlue;
+  // Multi-layered color mixing based on density (matches real nebula structure)
+  vec3 color = darkTeal;
 
-  // Layer 1: Deep blue to purple (low density)
-  color = mix(color, purple, smoothstep(0.1, 0.3, density));
+  // Layer 1: Teal to crimson (oxygen to sulfur transition)
+  color = mix(color, crimson, smoothstep(0.15, 0.35, density));
 
-  // Layer 2: Purple to magenta (medium density)
-  color = mix(color, magenta, smoothstep(0.3, 0.5, density));
+  // Layer 2: Crimson to rust (sulfur-rich regions)
+  color = mix(color, deepRust, smoothstep(0.35, 0.5, density));
 
-  // Layer 3: Magenta to orange (high density)
-  color = mix(color, orange, smoothstep(0.5, 0.7, density));
+  // Layer 3: Rust to amber (hydrogen emission appears)
+  color = mix(color, amber, smoothstep(0.5, 0.65, density));
 
-  // Layer 4: Orange to yellow (very high density)
-  color = mix(color, yellow, smoothstep(0.7, 0.85, density));
+  // Layer 4: Amber to golden (dense hydrogen regions)
+  color = mix(color, golden, smoothstep(0.65, 0.82, density));
 
-  // Layer 5: Yellow to white (extreme density - bright cores)
-  color = mix(color, white, smoothstep(0.85, 1.0, density));
+  // Layer 5: Golden to pale gold (bright stellar cores)
+  color = mix(color, paleGold, smoothstep(0.82, 1.0, density));
 
   // Add depth variation (darker in distance, brighter closer)
   color *= (0.5 + 0.5 * depth);
@@ -93,6 +94,12 @@ void main() {
   // Map noise from [-1, 1] to [0, 1]
   float density = (combinedNoise + 1.0) * 0.5;
 
+  // Add subtle vertical pillar structure (characteristic of Carina Nebula)
+  // Creates gentle vertical streaks without being too literal
+  float verticalNoise = snoise(vec3(vPosition.x * 1.5, vPosition.y * 0.8, uTime * 0.01));
+  float pillarStructure = smoothstep(0.3, 0.7, verticalNoise * 0.5 + 0.5);
+  density = mix(density, density * pillarStructure, 0.25); // Subtle 25% blend
+
   // Apply radial falloff (nebula fades toward edges)
   float radialMask = 1.0 - smoothstep(0.2, 0.6, distFromCenter);
   density *= radialMask;
@@ -112,6 +119,19 @@ void main() {
 
   // Boost brightness in high-density regions
   color *= (1.0 + density * 0.5);
+
+  //
+  // DISTANCE-BASED FADE FOR CLOSE PROXIMITY
+  // Prevents hard edges when camera is very close to nebula plane
+  //
+
+  // Calculate distance from camera to this fragment's position in world space
+  float fragDistanceFromCamera = length(vPosition - uCameraPosition);
+
+  // Apply gentle fade when camera is very close (< 5 units)
+  // This prevents harsh cutoffs at close range
+  float proximityFade = smoothstep(0.5, 5.0, fragDistanceFromCamera);
+  alpha *= proximityFade;
 
   // Output final color
   gl_FragColor = vec4(color, alpha);

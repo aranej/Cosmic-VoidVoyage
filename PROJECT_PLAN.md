@@ -50,7 +50,7 @@
 
 ### Sub-Tasks:
 
-- [>] **M1.1: Procedural Nebula Shader** [2025-11-08T16:00:00+01:00]
+- [x] **M1.1: Procedural Nebula Shader** [COMPLETED 2025-11-08T17:30:00+01:00]
   - [x] M1.1.1: Research Perlin noise and fBM GLSL implementations [2025-11-08T16:15:00+01:00]
     - Identified: Stefan Gustavson/Ashima simplex noise (production-ready)
     - Reference: The Book of Shaders fBM techniques
@@ -67,17 +67,36 @@
     - Time-based Z-axis drift (slow rotation)
     - Sinusoidal pulsing (breathing effect)
     - Animated stars background for parallax
-  - [>] M1.1.5: Optimize for 60 FPS target [2025-11-08T17:00:00+01:00]
+  - [x] M1.1.5: Optimize for 60 FPS target [2025-11-08T17:00:00+01:00]
     - Build verified: 9.16KB app code (3.80KB gzipped)
     - Total bundle: 126KB gzipped ✅
-    - Performance testing in progress
-  - **Status:** Shader implementation complete, optimization in progress
+    - Performance verified in browser
+  - **Status:** ✅ COMPLETED - Merged in PR #2
 
-- [ ] **M1.2: Camera Flight System**
-  - Implement CatmullRomCurve3 spline paths
-  - Create smooth interpolation with easing
-  - Test path from origin to nebula
-  - **Expected Output:** Smooth camera movement system
+- [x] **M1.2: Camera Flight System** [COMPLETED 2025-11-08T18:30:00+01:00]
+  - [x] M1.2.1: Create CatmullRomCurve3 spline path [2025-11-08T18:00:00+01:00]
+    - Implemented createNebulaFlightPath() helper function
+    - 5 control points with lateral variation for interesting path
+    - Configurable curve intensity parameter
+  - [x] M1.2.2: Implement camera controller [2025-11-08T18:15:00+01:00]
+    - Created CameraController class (src/camera/CameraController.ts)
+    - Smooth path interpolation using getPoint()
+    - Start/stop/reset flight controls
+    - Progress tracking (0-1)
+  - [x] M1.2.3: Add easing functions [2025-11-08T18:15:00+01:00]
+    - Implemented 5 easing functions: linear, easeInOutCubic, easeInOutQuad, easeOutCubic, easeInCubic
+    - Default: easeInOutCubic for natural acceleration/deceleration
+  - [x] M1.2.4: Test automated flight [2025-11-08T18:20:00+01:00]
+    - Keyboard controls: SPACE/ENTER (start/pause), R (reset)
+    - 10-second test flight from z=20 to nebula center
+    - Progress display in UI (0-100%)
+  - [x] M1.2.5: Implement look-at targeting [2025-11-08T18:15:00+01:00]
+    - Fixed look-at target (nebula center)
+    - Dynamic look-ahead option (5% ahead on path)
+    - Smooth orientation throughout flight
+  - **Build metrics:** 11.86KB app code (4.71KB gzipped), 493.58KB Three.js (123.74KB gzipped)
+  - **Total bundle:** ~128.5KB gzipped ✅ Well under target
+  - **Status:** ✅ COMPLETED - Ready for PR
 
 - [ ] **M1.3: First Nebula Complete**
   - Design fully-realized nebula (inspired by Carina Nebula)

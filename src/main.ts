@@ -1,12 +1,12 @@
 /**
- * Cosmic VoidVoyage - Milestone 1
- * Procedural Nebula Implementation
+ * Cosmic VoidVoyage - Milestone 1.2
+ * Camera Flight System Implementation
  *
  * Features:
  * - Procedural nebula generation using Simplex noise + fBM
- * - Hubble-inspired color gradients (Carina Nebula palette)
- * - Animated with subtle pulsing and rotation
- * - Three.js ShaderMaterial with custom GLSL
+ * - Automated camera flight along smooth spline path
+ * - Easing functions for natural acceleration/deceleration
+ * - Dynamic camera orientation (look-at nebula center)
  */
 
 import * as THREE from 'three';
@@ -15,6 +15,13 @@ import * as THREE from 'three';
 import noiseGLSL from './shaders/noise.glsl?raw';
 import vertexShader from './shaders/nebula.vert.glsl?raw';
 import fragmentShaderRaw from './shaders/nebula.frag.glsl?raw';
+
+// Import camera controller
+import {
+  CameraController,
+  createNebulaFlightPath,
+  Easing,
+} from './camera/CameraController';
 
 // Scene setup
 const scene = new THREE.Scene();
@@ -27,7 +34,6 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-camera.position.z = 2;
 
 // Renderer setup - WebGL only (NOT WebGPU)
 const renderer = new THREE.WebGLRenderer({
@@ -45,7 +51,6 @@ if (container) {
 }
 
 // Inject noise functions into fragment shader
-// Replace the #include <noise> directive with actual noise code
 const fragmentShader = fragmentShaderRaw.replace('#include <noise>', noiseGLSL);
 
 // Shader uniforms
@@ -54,6 +59,7 @@ const uniforms = {
   uResolution: {
     value: new THREE.Vector2(window.innerWidth, window.innerHeight),
   },
+  uCameraPosition: { value: new THREE.Vector3() },
 };
 
 // Create shader material
@@ -64,15 +70,18 @@ const nebulaMaterial = new THREE.ShaderMaterial({
   transparent: true,
   side: THREE.DoubleSide,
   depthWrite: false,
-  blending: THREE.AdditiveBlending, // Additive blending for glow effect
+  blending: THREE.AdditiveBlending,
 });
 
-// Create large plane geometry to fill the view
-const nebulaGeometry = new THREE.PlaneGeometry(10, 10, 128, 128);
-
-// Create mesh
+// Create nebula mesh (positioned at origin)
+// Large plane (50x50) ensures edges never visible even at close camera distances
+// Subdivision (128x128) maintains smooth procedural detail
+const nebulaGeometry = new THREE.PlaneGeometry(50, 50, 128, 128);
 const nebulaMesh = new THREE.Mesh(nebulaGeometry, nebulaMaterial);
 scene.add(nebulaMesh);
+
+// Nebula position (center of the journey)
+const nebulaPosition = new THREE.Vector3(0, 0, 0);
 
 // Add background stars for depth
 const starsGeometry = new THREE.BufferGeometry();
@@ -99,17 +108,114 @@ starsGeometry.setAttribute(
 const stars = new THREE.Points(starsGeometry, starsMaterial);
 scene.add(stars);
 
-// Performance monitoring
+// ===== CAMERA FLIGHT SYSTEM =====
+
+// Starting position (deep space, far from nebula for meditative journey)
+const startPosition = new THREE.Vector3(0, 5, 100);
+
+// Create flight path using CatmullRomCurve3
+const flightPath = createNebulaFlightPath(
+  startPosition,
+  nebulaPosition,
+  0.08 // Low curve intensity for smooth, gentle flight (not roller coaster)
+);
+
+// Create camera controller
+const cameraController = new CameraController({
+  camera,
+  path: flightPath,
+  duration: 20, // 20 second relaxing flight for testing (will sync with audio in M2)
+  easing: Easing.easeInOutQuad, // Gentle easing for meditative experience
+  lookAtTarget: nebulaPosition, // Always look at nebula center
+  onProgress: (progress) => {
+    // Update progress display
+    updateFlightProgress(progress);
+  },
+  onComplete: () => {
+    console.log('Flight complete! Arrived at nebula.');
+    updateFlightStatus('Complete');
+  },
+});
+
+// Set initial camera position
+camera.position.copy(startPosition);
+camera.lookAt(nebulaPosition);
+
+// ===== UI UPDATES =====
+
+function updateFlightProgress(progress: number): void {
+  const progressElement = document.getElementById('flight-progress');
+  if (progressElement) {
+    const percentage = Math.round(progress * 100);
+    progressElement.textContent = `${percentage}%`;
+  }
+}
+
+function updateFlightStatus(status: string): void {
+  const statusElement = document.getElementById('flight-status');
+  if (statusElement) {
+    statusElement.textContent = status;
+
+    // Update CSS class for color
+    statusElement.className = '';
+    switch (status.toLowerCase()) {
+      case 'ready':
+        statusElement.classList.add('status-ready');
+        break;
+      case 'flying':
+        statusElement.classList.add('status-flying');
+        break;
+      case 'paused':
+        statusElement.classList.add('status-paused');
+        break;
+      case 'complete':
+        statusElement.classList.add('status-complete');
+        break;
+    }
+  }
+}
+
+// ===== KEYBOARD CONTROLS =====
+
+window.addEventListener('keydown', (event) => {
+  switch (event.code) {
+    case 'Space':
+    case 'Enter':
+      // Toggle between play and pause (both keys do the same thing)
+      event.preventDefault();
+      cameraController.toggle();
+      updateFlightStatus(cameraController.isActive() ? 'Flying' : 'Paused');
+      break;
+
+    case 'KeyR':
+      // Reset to start position
+      event.preventDefault();
+      cameraController.reset();
+      updateFlightStatus('Ready');
+      updateFlightProgress(0);
+      break;
+  }
+});
+
+// ===== PERFORMANCE MONITORING =====
+
 let lastTime = performance.now();
 let frameCount = 0;
 let fps = 60;
 
-// Animation loop
+// ===== ANIMATION LOOP =====
+
 function animate() {
   requestAnimationFrame(animate);
 
   // Update time uniform
-  uniforms.uTime.value = performance.now() * 0.001; // Convert to seconds
+  uniforms.uTime.value = performance.now() * 0.001;
+
+  // Update camera controller
+  cameraController.update();
+
+  // Update camera position uniform for shader
+  uniforms.uCameraPosition.value.copy(camera.position);
 
   // Slowly rotate stars for parallax effect
   stars.rotation.y += 0.0001;
@@ -127,7 +233,6 @@ function animate() {
     lastTime = currentTime;
     frameCount = 0;
 
-    // Update FPS display if element exists
     const fpsElement = document.getElementById('fps');
     if (fpsElement) {
       fpsElement.textContent = `${fps} FPS`;
@@ -135,22 +240,28 @@ function animate() {
   }
 }
 
-// Handle window resize
+// ===== WINDOW RESIZE =====
+
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-  // Update resolution uniform
   uniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
 });
 
-// Start animation
+// ===== INITIALIZATION =====
+
+// Start animation loop
 animate();
 
 // Log initialization
-console.log('Cosmic VoidVoyage - Milestone 1 initialized');
+console.log('Cosmic VoidVoyage - Milestone 1.2 initialized');
 console.log('Three.js version:', THREE.REVISION);
 console.log('Renderer:', renderer.capabilities.isWebGL2 ? 'WebGL2' : 'WebGL');
-console.log('Procedural nebula shader active');
+console.log('Camera flight system active');
+console.log('Controls: SPACE = Start/Pause | R = Reset | ENTER = Start');
+
+// Initial UI state
+updateFlightStatus('Ready');
+updateFlightProgress(0);
